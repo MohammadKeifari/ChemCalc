@@ -126,34 +126,41 @@ class Compound:
         
 class Reaction:
     """
-    Represents a reversible chemical reaction, with kinetic and equilibrium parameters.
+    Represents a reversible chemical reaction with kinetic and equilibrium parameters.
+
+    This class stores all information about a chemical reaction, including reactants,
+    products, their stoichiometric coefficients, rate dependencies, and rate constants.
+    It can be created manually or parsed from reaction strings written in either
+    a simple or complex syntax.
 
     Attributes:
-        reactants (list[dict]): Reactant data (coefficient, Compound, rate dependency).
-        products (list[dict]): Product data (coefficient, Compound, rate dependency).
-        K (float): Equilibrium constant.
-        kf (float): Forward reaction rate constant.
-        kb (float): Backward reaction rate constant.
-        T (float): Reaction temperature.
-        compounds (list[dict]): All species involved with concentrations and type.
+        reactants (list[dict]): List of reactant dictionaries, each containing:
+            - "stoichiometric_coefficient" (float)
+            - "compound" (Compound)
+            - "rate_dependency" (float)
+        products (list[dict]): List of product dictionaries with the same structure.
+        K (float): Equilibrium constant of the reaction.
+        kf (float): Forward rate constant.
+        kb (float): Backward rate constant.
+        T (float): Reaction temperature in Kelvin.
+        compounds (list[dict]): All involved species (reactants and products) with
+            their concentration and type ("reactant" or "product").
     """
     def __init__(self, reactants , products , reactants_concentration , products_concentration , K=1, kf=1, kb=1 , T=298):
         """
-        Initialize a Reaction object.
+        Initialize a Reaction instance.
 
         Args:
-            reactants (list[dict]): Each dict has:
-                - "stoichiometric_coefficient" (float)
-                - "compound" (Compound)
-                - "rate_dependency" (float)
-            products (list[dict]): Same structure as reactants.
-            reactants_concentration (list[float], optional): Reactant concentrations.
-            products_concentration (list[float], optional): Product concentrations.
-            K (float, optional): Equilibrium constant.
-            kf (float, optional): Forward rate constant.
-            kb (float, optional): Backward rate constant.
-            T (float, optional): Temperature (K).
+            reactants (list[dict]): List of reactant definitions.
+            products (list[dict]): List of product definitions.
+            reactants_concentration (list[float]): Initial concentrations of reactants.
+            products_concentration (list[float]): Initial concentrations of products.
+            K (float, optional): Equilibrium constant. Defaults to 1.
+            kf (float, optional): Forward rate constant. Defaults to 1.
+            kb (float, optional): Backward rate constant. Defaults to 1.
+            T (float, optional): Temperature in Kelvin. Defaults to 298.
         """
+
         self.K = K
         self.kf = kf
         self.kb = kb
@@ -177,29 +184,36 @@ class Reaction:
             counter += 1
     @classmethod
     def from_string_complex_syntax(cls, reaction_str , concentrations = None , K=1, kf=1, kb=1 , T = 298):
-        '''
-        Creates reaction object from an string with any of the following formats:
-        A & 2_B & ... > 3_C & 2_D_-1 & ... \n
-        The prefix number represents the stoichiometric_coefficient and the default value is 1 \n
-        The suffix number represents rate_dependency or order of the reaction with respect to the reactant or product and the default vaule is 1 \n
-        example: Fe(CN)6-3 & Ce+2 > Fe(CN)6-4 & Ce+3
-        Split the stoichiometric_coefficient and rate_dependency from the name of the compound with "_"
-        Unlike from_string_simple_syntax here your compound name could include numbers and + , -
+        """
+        Create a Reaction object from a string with complex syntax.
 
-        To specify the phase use the following syntax:
-        A.g & 2B.s & ... > 3c.aq & 2D.g-1 & ...
+        The complex syntax allows compound names to include numbers and symbols
+        such as + or -, and supports stoichiometric and rate order annotations.
+
+        Format:
+            "A & 2_B & ... > 3_C & 2_D_-1 & ..."
+            - Prefix number = stoichiometric coefficient (default = 1)
+            - Suffix number = rate dependency (default = 1)
+            - Compounds may contain digits and signs (+, -, ( )).
+            - Phases can be specified as .s, .l, .g, or .aq
+
+        Example:
+            "Fe(CN)6-3 & Ce+2 > Fe(CN)6-4 & Ce+3"
+
         Args:
-            reaction(string): The equation formula with the mentioned structure.
+            reaction_str (str): Reaction formula.
+            concentrations (list[float], optional): Concentrations of reactants and products in order.
+            K (float, optional): Equilibrium constant. Defaults to 1.
+            kf (float, optional): Forward rate constant. Defaults to 1.
+            kb (float, optional): Backward rate constant. Defaults to 1.
+            T (float, optional): Temperature in Kelvin. Defaults to 298.
 
-            concentrations(list of int or float): the list of concentration of reactants and products in the order they come in the reaction from left to right
-            
-            K(int or float): The equilibrium constant of reaction
+        Returns:
+            Reaction: Parsed Reaction instance.
 
-            kf(int or float): The forward reaction rate constant
-
-            kb(int or float): The backward reaction rate constant
-
-        '''
+        Raises:
+            ValueError: If the reaction string format is invalid.
+        """
 
         reformed_reaction = reaction_str.replace(" ","").split(">")
         splited_to_component_reaction = [component.split("&") for component in reformed_reaction] 
@@ -283,31 +297,35 @@ class Reaction:
         return cls(inputed_reactants , inputed_products, reactants_concentration , products_concentrations , K , kf , kb , T)
     @classmethod
     def from_string_simple_syntax(cls , reaction_str , concentrations=None , K=1, kf=1, kb=1 , T=298):
-        '''
-        Creates reaction object from an string with any of the following formats:
-        A + 2B + ... > 3C + 2D-1 + ... \n
-        The prefix number represents the stoichiometric_coefficient and the default value is 1 \n
-        The suffix number represents rate_dependency or order of the reaction with respect to the reactant or product and the default vaule is 1 \n
-        B + C > CB
-        Unlike from_string_complex_syntax here your compound name shouldn't include numbers and + , -
+        """
+        Create a Reaction object from a string using simple syntax.
 
-        To specify the phase use the following syntax:
-        A.g + 2B.s + ... > 3c.aq + 2D.g-1 + ...
+        The simple syntax only allows alphabetic compound names (no +, -, or numbers inside names).
+        It also supports optional stoichiometric and rate dependency annotations.
 
-        The general order for each compound should follow the format below:
-        stoichiometric_coefficient(optional) + name(only alhpabet) + .phase(.s/.g/.l/.aq , optional) + rate_dependency(optional)
-        
+        Format:
+            "A + 2B + ... > 3C + 2D-1 + ..."
+            - Prefix number = stoichiometric coefficient (default = 1)
+            - Suffix number = rate dependency (default = 1)
+            - Phase can be added as .s, .l, .g, or .aq
+
+        Example:
+            "2H2.g + O2.g > 2H2O.l"
+
         Args:
-            reaction(string): The equation formula with the mentioned structure.
+            reaction_str (str): Reaction formula.
+            concentrations (list[float], optional): Reactant/product concentrations.
+            K (float, optional): Equilibrium constant. Defaults to 1.
+            kf (float, optional): Forward rate constant. Defaults to 1.
+            kb (float, optional): Backward rate constant. Defaults to 1.
+            T (float, optional): Temperature in Kelvin. Defaults to 298.
 
-            K(int or float): The equilibrium constant of reaction
+        Returns:
+            Reaction: Parsed Reaction instance.
 
-            kf(int or float): The forward reaction rate constant
-
-            kb(int or float): The backward reaction rate constant
-
-            T(int or float): The temperature of reaction and the constants(K, kf ,kb)
-        '''
+        Raises:
+            ValueError: If the input reaction string does not match valid format.
+        """
         reformed_reaction = reaction_str.replace(" ","").split(">")
         splited_to_component_reaction = [component.split("+") for component in reformed_reaction] 
         component_counter = 0
@@ -415,10 +433,20 @@ class Reaction:
         products_concentrations = concentrations[len(inputed_reactants):]
         return cls(inputed_reactants , inputed_products, reactants_concentration , products_concentrations , K , kf , kb , T)
     def __str__(self):
-        """Return a concise representation of the reaction."""
+        """
+        Return a human-readable chemical equation.
+
+        Returns:
+            str: Reaction equation string with phase labels.
+        """
         return self.__repr__()
     def __repr__(self):
-        """Return a concise representation of the reaction."""
+        """
+        Return a formatted reversible reaction equation.
+
+        Returns:
+            str: Chemical equation formatted with Unicode ⇌ and phases.
+        """
         reaction_equation = ""
         counter = 0
         for compound in self.reactants :
@@ -445,6 +473,18 @@ class Reaction:
             counter += 1  
         return reaction_equation
     def __add__(self , other):
+        """
+        Combine two Reaction objects into a single net reaction.
+
+        The resulting reaction merges reactants and products, cancelling species
+        that appear on both sides.
+
+        Args:
+            other (Reaction): Another Reaction instance.
+
+        Returns:
+            Reaction: New Reaction object 
+        """
         new_compounds_name = []
         new_reactants = []
         new_products = []
@@ -481,14 +521,29 @@ class Reaction:
                 new_reaction += (product + " & ")
             else:
                 new_reaction += (product)
-            counter += 1
-        try:   
-            return Reaction(new_reaction)
-        except:
-            return None 
+            counter += 1   
+        return Reaction(new_reaction)
+
     def __iadd__(self , other):
+        """
+        In-place addition operator for reactions.
+
+        Equivalent to self + other.
+
+        Args:
+            other (Reaction): Another Reaction instance.
+
+        Returns:
+            Reaction: Combined reaction or None if invalid.
+        """
         return self.__add__(other)
     def __iter__(self):
+        """
+        Iterate over all species in the reaction.
+
+        Yields:
+            dict: Compound dictionary with concentration, type, and coefficient.
+        """
         for compound in self.compounds:
             yield compound
 class Enviroment():
