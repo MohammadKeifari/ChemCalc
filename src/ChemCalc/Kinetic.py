@@ -1,10 +1,8 @@
 from _general import Enviroment
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+import matplotlib
 import random
 from itertools import count
-import threading
-import time
+import numpy as np
 
 class KineticalCalculator:
     """
@@ -58,40 +56,61 @@ class KineticalCalculator:
         for compound in enviroment.compounds_concentration :
             self.concentrations.append(compound["concentration"])
         self.fitted = True
-    def calculate(self  , time , checkpoint_time = [] , plot = False  ,concentration_below_zero = "SetToZero"):
+    def calculate(self  , time , checkpoint_time = [] , plot = False , directory = "./plot.png" ):
         """
-        Numerically integrate reaction kinetics over a given time period.
+        Numerically integrate the reaction kinetics over a specified time interval.
 
-        Supports plotting concentration vs. time and extracting concentration values at checkpoints.
+        This method simulates the time evolution of compound concentrations in the
+        environment using a fixed time step defined by `self.accuracy`. It supports
+        interactive plotting, saving plots to file, and recording concentration
+        snapshots at specific checkpoint times.
 
         Args:
-            time (float): Total simulation time.
-            checkpoint_time (list[float], optional): Specific times to record concentration snapshots.
-            plot (bool, optional): Whether to visualize the reaction progress in real-time.
-            concentration_below_zero (str, optional): Behavior when a concentration would fall below zero.
-                - "SetToZero": Clamp to zero (default)
-                - "DoNotChange": Keep previous value
-                - "GoNegetive": Allow negative concentrations
+            time (float): Total simulation time in the same units as `self.accuracy`.
+            checkpoint_time (list[float], optional): Times at which to record concentrations.
+            plot (bool or str, optional): Plotting mode. Options:
+                - False: Do not plot.
+                - "interactive": Display real-time interactive plot.
+                - "save": Save the plot to the specified `directory`.
+            directory (str, optional): File path to save the plot if `plot="save"`.
 
         Returns:
-            list[list]: List of checkpoint data as `[time, concentrations]` pairs.
+            list[list]: List of checkpoints, where each entry is `[time, concentrations]`.
+                The first entry includes the header `["time", compound_unicode_formulas]`.
 
         Raises:
-            NameError: If `fit` was not called before calculation.
-            ValueError: For invalid `concentration_below_zero` parameter.
+            NameError: If the model has not been fitted to an environment (i.e., `fit` not called).
+            ValueError: If an invalid plotting mode or directory is provided.
+
+        Behavior:
+            - Concentrations are clamped to zero if they become negative.
+            - Supports recording concentrations at arbitrary checkpoint times.
+            - Interactive plotting allows the user to type 'exit' to close the plot.
+
+        Example:
+            >>> kc = KineticalCalculator(accuracy=0.01)
+            >>> kc.fit(env)
+            >>> results = kc.calculate(time=10, checkpoint_time=[1,5,10], plot="interactive")
         """
 
         if not self.fitted :
             raise NameError("You should fir the model to an enviromt object before calculation")
+
         
+        if plot == "interactive" :
+            matplotlib.use("TkAgg", force=True)
+        elif plot == "save" :
+            matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
         plt.figure()
         colors = []
-        if plot:
+        if plot != False:
             for i in self.enviroment.compounds :
                 colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
                 plt.xlabel("time")
                 plt.ylabel("concentration")
-                
+
+               
         
         compounds_lenght = len(self.concentrations)
         checkpoints = [["time" , self.enviroment.compounds_unicode_formula]]
@@ -129,17 +148,10 @@ class KineticalCalculator:
             delta_concentration = calculate_concentration_change()
             for j in range(len(delta_concentration)):
                 concentration = self.concentrations[j] + delta_concentration[j]
-                if concentration > 0 :
-                    self.concentrations[j] = concentration
-                elif concentration_below_zero == "DoNotChange":
-                    pass
-                elif concentration_below_zero == "GoNegetive":
-                    self.concentrations[j] = concentration
-                elif concentration_below_zero == "SetToZero":
+                if concentration < 0 :
                     self.concentrations[j] = 0
                 else:
-                    raise ValueError("concentration_below_zero must be one of: "
-                                     "SetToZero, DoNotChange, GoNegetive")
+                    self.concentrations[j] = concentration
             if plot :
                 for k in range(len(self.concentrations)):
                     plt.plot([t , t-self.accuracy],[self.concentrations[k] , self.concentrations[k]-delta_concentration[k]] , color = colors[k])
@@ -149,7 +161,7 @@ class KineticalCalculator:
                     checkpoints.append([checkpoint_t , self.concentrations.copy()])
                     
             t += self.accuracy
-        if plot :
+        if plot == "interactive" :
             for k in range(len(self.concentrations)):
                 plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
             plt.legend()
@@ -164,31 +176,168 @@ class KineticalCalculator:
                     break
                 else:
                     print("Invalid input.")
+        elif plot == "save" :
+            plt.savefig(directory)
+            plt.close()
         checkpoints.append([time , self.concentrations])
         
         
         return checkpoints
-    
-    def calculate_responsively(self, checkpoint_time = [] ,  animation_update_interval = 0.1 , plot = False , concentration_below_zero = "SetToZero"):
+    def calculate_by_array(self  , time , checkpoint_time = [] , plot = False , directory = "./plot.png"):
         """
-        Continuously update and visualize reaction progress in real-time.
+        Numerically integrate reaction kinetics using fully vectorized array operations.
 
-        This method is similar to `calculate()`, but uses an interactive animation
-        (`matplotlib.animation.FuncAnimation`) for responsive plotting.
+        This method simulates the time evolution of compound concentrations in the
+        environment over a specified time interval, leveraging NumPy arrays for
+        faster computation compared to iterative approaches. Supports real-time plotting
+        or saving plots to file, and recording concentrations at specified checkpoint times.
 
         Args:
-            checkpoint_time (list[float], optional): Times to record intermediate concentrations.
-            animation_update_interval (float, optional): Update interval for live animation (seconds).
-            plot (bool, optional): Whether to visualize concentrations dynamically.
-            concentration_below_zero (str, optional): How to handle negative concentrations.
-                Same as in `calculate()`.
+            time (float): Total simulation time in the same units as `self.accuracy`.
+            checkpoint_time (list[float], optional): Times at which to record concentration snapshots.
+            plot (bool or str, optional): Plotting mode. Options:
+                - False: Do not plot.
+                - "interactive": Display real-time interactive plot.
+                - "save": Save the plot to the specified `directory`.
+            directory (str, optional): File path to save the plot if `plot="save"`.
 
         Returns:
-            list[list]: List of checkpoint data `[time, concentrations]`.
+            list: List of checkpoints containing concentration arrays.
+                - Each checkpoint is a NumPy array of compound concentrations.
+                - The final entry always contains the concentrations at the end of simulation.
+
+        Raises:
+            NameError: If the model has not been fitted to an environment (i.e., `fit` not called).
+            ValueError: If an invalid plotting mode or directory is provided.
+
+        Notes:
+            - Negative concentrations are clamped to zero.
+            - Uses NumPy array operations to compute forward and backward reaction rates,
+            and the resulting concentration changes.
+            - Interactive plotting allows the user to type 'exit' to close the plot.
+
+        Example:
+            >>> kc = KineticalCalculator(accuracy=0.01)
+            >>> kc.fit(env)
+            >>> results = kc.calculate_by_array(time=10, checkpoint_time=[1,5,10], plot="interactive")
+        """
+        if not self.fitted :
+            raise NameError("You should fir the model to an enviromt object before calculation")
+        if plot == "interactive" :
+            matplotlib.use("TkAgg", force=True)
+        elif plot == "save" :
+            matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        plt.figure()
+        colors = []
+        checkpoints = []
+        if plot:
+            for i in self.enviroment.compounds :
+                colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
+                plt.xlabel("time")
+                plt.ylabel("concentration")
+        t_compounds = len(self.enviroment.compounds)
+        t_reactions = len(self.enviroment)
+        concentrations = self.enviroment.concentrations_array
+        rate_dependencies = self.enviroment.rate_dependency_array
+        stoichiometric_coefficient = self.enviroment.stoichiometric_coefficient_array
+        rate_constants = self.enviroment.rate_constants_array
+        time_interval = self.accuracy
+        def calculate_rf():
+            rf = np.multiply(
+                np.prod(np.power(np.tile(concentrations , (t_reactions , 1)) , rate_dependencies[: , 0 , :].reshape(-1 , t_compounds)), axis=1).reshape(-1,1) ,
+                rate_constants[: , 0].reshape(-1 , 1)
+            ).reshape(-1)* time_interval            
+            return rf
+        def calculate_rb():
+            rb = np.multiply(
+                np.prod(np.power(np.tile(concentrations , (t_reactions , 1)) , rate_dependencies[: , 1 , :].reshape(-1 , t_compounds)) , axis=1).reshape(-1,1) ,
+                rate_constants[: , 1].reshape(-1 , 1)
+            ).reshape(-1)* time_interval            
+            return rb
+        def calculate_concentration_change():
+            rate = (calculate_rf() - calculate_rb())            
+            concentration_change  = ((np.multiply(stoichiometric_coefficient , rate.reshape(-1 , 1))).sum(axis=0)).reshape(-1)
+            return concentration_change
+        t = 0
+        for i in range(int(time/self.accuracy+1)):
+            new_conentratinos = np.add(concentrations, calculate_concentration_change())
+            new_conentratinos[new_conentratinos < 0] = 0
+            if plot :
+                for k in range(len(self.concentrations)):
+                    plt.plot([t , t-self.accuracy],[new_conentratinos[k] , concentrations[k]] , color = colors[k])
+            for checkpoint_t in checkpoint_time:
+                
+                if t <= checkpoint_t < t + self.accuracy:
+                    checkpoints.append([new_conentratinos])
+            concentrations = new_conentratinos
+            t += self.accuracy
+        if plot == "interactive":
+            for k in range(len(self.concentrations)):
+                plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
+            plt.legend()
+            plt.show(block = False)
+            
+            print("Type 'exit' to close the plot:")
+            exited = False
+            while not exited:
+                cmd = input().strip().lower()
+                if cmd == "exit":
+                    plt.close()
+                    break
+                else:
+                    print("Invalid input.")
+        elif plot == "save" :
+            plt.savefig(directory)
+            plt.close()
+        checkpoints.append(concentrations)  
+        return checkpoints
+    def calculate_responsively(self, checkpoint_time = [] ,  animation_update_interval = 0.1 , plot = False ):
+        """
+        Simulate and visualize reaction kinetics dynamically using an interactive animation.
+
+        This method continuously updates compound concentrations over time while
+        optionally displaying a live animation using `matplotlib.animation.FuncAnimation`.
+        It is especially useful for observing reaction progress in real-time.
+
+        Args:
+            checkpoint_time (list[float], optional): Specific times at which to record concentrations.
+            animation_update_interval (float, optional): Time interval between animation updates (in seconds).
+            plot (bool, optional): Whether to visualize the reaction dynamically.
+                - If True, a live plot will be shown and user can interact with it:
+                    * 'stop'  - pause the animation
+                    * 'resume' - resume the animation
+                    * 'exit'  - close the plot and stop the simulation
+                - If False, no plot is generated.
+
+        Returns:
+            list[list]: A list of checkpoint data of the form `[time, concentrations]`.
+                - Each entry is a snapshot of concentrations at the corresponding time.
+                - The last entry corresponds to the final concentrations at the end of the simulation.
+
+        Raises:
+            NameError: If the model has not been fitted to an environment (i.e., `fit` not called).
+
+        Notes:
+            - Negative concentrations are clamped to zero during simulation.
+            - The method relies on an internal `calculate_concentration_change` function
+            to compute instantaneous changes in concentrations per reaction step.
+            - This approach differs from `calculate()` by providing a live, responsive animation
+            rather than a static plot or final checkpoint data.
+            - Checkpoints specified in `checkpoint_time` are captured even during animation.
+
+        Example:
+            >>> kc = KineticalCalculator(accuracy=0.01)
+            >>> kc.fit(env)
+            >>> results = kc.calculate_responsively(checkpoint_time=[1,5,10], plot=True)
         """
         if not self.fitted :
             raise NameError("You must fit the model to an Enviroment before calculation.")
-        
+        if plot :
+             matplotlib.use("TkAgg", force=True)
+        import matplotlib.pyplot as plt
+        from matplotlib.animation import FuncAnimation
         plt.figure()
             
         colors = []
@@ -237,16 +386,11 @@ class KineticalCalculator:
             delta_concentration = calculate_concentration_change()
             for j in range(len(delta_concentration)):
                 concentration = self.concentrations[j] + delta_concentration[j]
-                if concentration > 0 :
-                    self.concentrations[j] = concentration
-                elif concentration_below_zero == "DoNotChange":
-                    pass
-                elif concentration_below_zero == "GoNegetive":
-                    self.concentrations[j] = concentration
-                elif concentration_below_zero == "SetToZero":
+                if concentration < 0 :
                     self.concentrations[j] = 0
-                else:
-                    raise ValueError("concentration_below_zero should have one of the following values: SetToZero\\DoNotChange\\GoNegetive")
+                else :
+                    self.concentrations[j] = concentration  
+               
             if plot :
                 for k in range(len(self.concentrations)):
                     plt.plot([t , t-self.accuracy],[self.concentrations[k] , self.concentrations[k]-delta_concentration[k]] , color = colors[k])
