@@ -257,7 +257,7 @@ class KineticalCalculator:
             ).reshape(-1)* time_interval            
             return rb
         def calculate_concentration_change():
-            rate = (calculate_rf() - calculate_rb())            
+            rate = -(calculate_rf() - calculate_rb())            
             concentration_change  = ((np.multiply(stoichiometric_coefficient , rate.reshape(-1 , 1))).sum(axis=0)).reshape(-1)
             return concentration_change
         t = 0
@@ -461,7 +461,7 @@ class KineticalCalculator:
             ).reshape(-1)* time_interval            
             return rb
         def calculate_concentration_change():
-            rate = (calculate_rf() - calculate_rb())            
+            rate = -(calculate_rf() - calculate_rb())            
             concentration_change  = ((np.multiply(stoichiometric_coefficient , rate.reshape(-1 , 1))).sum(axis=0)).reshape(-1)
             return concentration_change
         
