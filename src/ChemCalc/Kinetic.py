@@ -293,7 +293,7 @@ class KineticalCalculator:
             plt.close()
         checkpoints.append(concentrations)  
         return checkpoints
-    def calculate_responsively(self, checkpoint_time = [] ,  animation_update_interval = 0.1 , plot = False ):
+    def calculate_responsively(self, checkpoint_time = [] ,  animation_update_interval = 0.1 ):
         """
         Simulate and visualize reaction kinetics dynamically using an interactive animation.
 
@@ -332,6 +332,7 @@ class KineticalCalculator:
             >>> kc.fit(env)
             >>> results = kc.calculate_responsively(checkpoint_time=[1,5,10], plot=True)
         """
+        plot = True
         if not self.fitted :
             raise NameError("You must fit the model to an Enviroment before calculation.")
         if plot :
@@ -421,4 +422,88 @@ class KineticalCalculator:
                 else:
                     print("invalid_input")
         checkpoints.append(["end" , self.concentrations])
+        return checkpoints
+    def calculate_by_array_responsively(self  , checkpoint_time = [] ,animation_update_interval = 0.1 ):
+        plot = True
+        if not self.fitted :
+            raise NameError("You must fit the model to an Enviroment before calculation.")
+        if plot :
+             matplotlib.use("TkAgg", force=True)
+        import matplotlib.pyplot as plt
+        from matplotlib.animation import FuncAnimation
+
+        plt.figure()
+        colors = []
+        checkpoints = []
+        if plot:
+            for i in self.enviroment.compounds :
+                colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
+                plt.xlabel("time")
+                plt.ylabel("concentration")
+                
+        t_compounds = len(self.enviroment.compounds)
+        t_reactions = len(self.enviroment)
+        concentrations = self.enviroment.concentrations_array
+        rate_dependencies = self.enviroment.rate_dependency_array
+        stoichiometric_coefficient = self.enviroment.stoichiometric_coefficient_array
+        rate_constants = self.enviroment.rate_constants_array
+        time_interval = self.accuracy
+        def calculate_rf():
+            rf = np.multiply(
+                np.prod(np.power(np.tile(concentrations , (t_reactions , 1)) , rate_dependencies[: , 0 , :].reshape(-1 , t_compounds)), axis=1).reshape(-1,1) ,
+                rate_constants[: , 0].reshape(-1 , 1)
+            ).reshape(-1)* time_interval            
+            return rf
+        def calculate_rb():
+            rb = np.multiply(
+                np.prod(np.power(np.tile(concentrations , (t_reactions , 1)) , rate_dependencies[: , 1 , :].reshape(-1 , t_compounds)) , axis=1).reshape(-1,1) ,
+                rate_constants[: , 1].reshape(-1 , 1)
+            ).reshape(-1)* time_interval            
+            return rb
+        def calculate_concentration_change():
+            rate = (calculate_rf() - calculate_rb())            
+            concentration_change  = ((np.multiply(stoichiometric_coefficient , rate.reshape(-1 , 1))).sum(axis=0)).reshape(-1)
+            return concentration_change
+        
+        time = count()
+        def animate(i):
+            """Animation update loop for real-time kinetics visualization."""
+
+            nonlocal concentrations
+            t = self.accuracy * next(time)
+            
+            new_conentratinos = np.add(concentrations, calculate_concentration_change())
+            new_conentratinos[new_conentratinos < 0] = 0
+        
+            for k in range(len(self.concentrations)):
+                plt.plot([t , t-self.accuracy],[new_conentratinos[k] , concentrations[k]] , color = colors[k])
+                
+            for checkpoint_t in checkpoint_time:
+                
+                if t <= checkpoint_t < t + self.accuracy:
+                    checkpoints.append([new_conentratinos])
+            concentrations = new_conentratinos
+
+        ani = FuncAnimation(plt.gcf() , animate , interval = animation_update_interval , cache_frame_data=False)        
+        if plot :
+            for k in range(len(self.concentrations)):
+                plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
+
+            plt.legend()
+            plt.show(block = False)
+            print("Type 'exit' to close / 'stop' to pause / 'resume' to continue:")
+            while True:
+                cmd = input().strip().lower()
+                if cmd == "exit":
+                    ani.pause()
+                    plt.close()
+                    break
+                elif cmd == "stop":
+                    ani.pause()
+                elif cmd == "resume":
+                    ani.resume()
+                else:
+                    print("invalid_input")       
+                    
+        checkpoints.append(concentrations)  
         return checkpoints
