@@ -81,6 +81,7 @@ class KineticalCalculator:
         Raises:
             NameError: If the model has not been fitted to an environment (i.e., `fit` not called).
             ValueError: If an invalid plotting mode or directory is provided.
+            ValueError: If `plot` is not one of [False, "save", "interactive"].
 
         Behavior:
             - Concentrations are clamped to zero if they become negative.
@@ -95,24 +96,26 @@ class KineticalCalculator:
 
         if not self.fitted :
             raise NameError("You should fir the model to an enviromt object before calculation")
-
+        if not plot in [False , "save" , "interactive"]:
+            raise ValueError("`plot` is not one of [False, 'save', 'interactive'].")
         
         if plot == "interactive" :
             matplotlib.use("TkAgg", force=True)
         elif plot == "save" :
             matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        plt.figure()
+        
         colors = []
         if plot != False:
+            plt.figure()
             for i in self.enviroment.compounds :
                 colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
                 plt.xlabel("time")
                 plt.ylabel("concentration")
 
                
-        
-        compounds_lenght = len(self.concentrations)
+        concentrations = self.concentrations.copy()
+        compounds_lenght = len(concentrations)
         checkpoints = [["time" , self.enviroment.compounds_unicode_formula]]
         def calculate_concentration_change():
             """Compute instantaneous change in concentrations for all compounds."""
@@ -121,16 +124,16 @@ class KineticalCalculator:
                 rf = self.accuracy * self.rate_constants[rxn_index][0]
                 counter = 0
                 for compound in self.reactions_by_index[rxn_index][0]:
-                    if not(self.concentrations[compound] == 0 and self.rate_dependency_by_reaction[rxn_index][0][counter] < 0):
-                        rf = rf * (self.concentrations[compound] ** self.rate_dependency_by_reaction[rxn_index][0][counter])
+                    if not(concentrations[compound] == 0 and self.rate_dependency_by_reaction[rxn_index][0][counter] < 0):
+                        rf = rf * (concentrations[compound] ** self.rate_dependency_by_reaction[rxn_index][0][counter])
                     else: 
                         rf = 0
                     counter += 1
                 counter = 0
                 rb = self.accuracy * self.rate_constants[rxn_index][1]
                 for compound in self.reactions_by_index[rxn_index][1]:
-                    if not(self.concentrations[compound] == 0 and self.rate_dependency_by_reaction[rxn_index][1][counter] < 0):
-                        rb = rb * (self.concentrations[compound] ** self.rate_dependency_by_reaction[rxn_index][1][counter])
+                    if not(concentrations[compound] == 0 and self.rate_dependency_by_reaction[rxn_index][1][counter] < 0):
+                        rb = rb * (concentrations[compound] ** self.rate_dependency_by_reaction[rxn_index][1][counter])
                     else:
                         rb = 0
                     counter += 1
@@ -143,18 +146,18 @@ class KineticalCalculator:
                     concentration_change[product] += (rf - rb) * self.stoichiometric_coefficient_by_reaction[rxn_index][1][counter]
                     counter += 1
             return concentration_change
-        t = 0
+        t = self.accuracy
         for i in range(int(time/self.accuracy+1)) :
             delta_concentration = calculate_concentration_change()
             for j in range(len(delta_concentration)):
-                concentration = self.concentrations[j] + delta_concentration[j]
+                concentration = concentrations[j] + delta_concentration[j]
                 if concentration < 0 :
-                    self.concentrations[j] = 0
+                    concentrations[j] = 0
                 else:
-                    self.concentrations[j] = concentration
-            if plot :
-                for k in range(len(self.concentrations)):
-                    plt.plot([t , t-self.accuracy],[self.concentrations[k] , self.concentrations[k]-delta_concentration[k]] , color = colors[k])
+                    concentrations[j] = concentration
+            if plot != False:
+                for k in range(compounds_lenght):
+                    plt.plot([t , t-self.accuracy],[concentrations[k] , concentrations[k]-delta_concentration[k]] , color = colors[k])
             for checkpoint_t in checkpoint_time:
                 
                 if t <= checkpoint_t < t + self.accuracy:
@@ -177,8 +180,15 @@ class KineticalCalculator:
                 else:
                     print("Invalid input.")
         elif plot == "save" :
+            
+            for k in range(len(self.concentrations)):
+                plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
+            plt.legend()
             plt.savefig(directory)
-            plt.close()
+            
+            plt.close('all')
+
+            del plt
         checkpoints.append([time , self.concentrations])
         
         
@@ -209,6 +219,7 @@ class KineticalCalculator:
         Raises:
             NameError: If the model has not been fitted to an environment (i.e., `fit` not called).
             ValueError: If an invalid plotting mode or directory is provided.
+            ValueError: If `plot` is not one of [False, "save", "interactive"].
 
         Notes:
             - Negative concentrations are clamped to zero.
@@ -222,17 +233,21 @@ class KineticalCalculator:
             >>> results = kc.calculate_by_array(time=10, checkpoint_time=[1,5,10], plot="interactive")
         """
         if not self.fitted :
-            raise NameError("You should fir the model to an enviromt object before calculation")
+            raise NameError("You should fit the model to an enviromt object before calculation")
+        if not plot in [False , "save" , "interactive"]:
+            raise ValueError("`plot` is not one of [False, 'save', 'interactive'].")
+        
         if plot == "interactive" :
             matplotlib.use("TkAgg", force=True)
         elif plot == "save" :
             matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
-        plt.figure()
+        
         colors = []
         checkpoints = []
-        if plot:
+        if plot != False:
+            plt.figure()
             for i in self.enviroment.compounds :
                 colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
                 plt.xlabel("time")
@@ -289,8 +304,10 @@ class KineticalCalculator:
                 else:
                     print("Invalid input.")
         elif plot == "save" :
+            for k in range(len(self.concentrations)):
+                plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
             plt.savefig(directory)
-            plt.close()
+            plt.close('all')
         checkpoints.append(concentrations)  
         return checkpoints
     def calculate_responsively(self, checkpoint_time = [] ,  animation_update_interval = 0.1 ):
