@@ -43,7 +43,7 @@ class KineticalCalculator:
         Raises:
             ValueError: If `enviroment` is not an instance of `Enviroment`.
         """
-        if type(enviroment) == Enviroment :
+        if isinstance(enviroment, Enviroment):
             self.enviroment = enviroment
         else:
             raise ValueError("The input should be an instance of Enviroment class")
@@ -176,6 +176,77 @@ class KineticalCalculator:
             del plt
         checkpoints.append(concentrations)  
         return checkpoints
+
+    def fit_calculate(self, enviroment, time, checkpoint_time=[], plot=False, directory="./plot.png"):
+        """
+        Fit the calculator to an environment and calculate reaction kinetics in one call.
+        
+        This is a convenience method that combines fit() and calculate() into a single
+        operation. It first fits the calculator to the provided environment, then
+        immediately performs the kinetic calculation.
+        
+        This method is equivalent to calling:
+            calculator.fit(enviroment)
+            results = calculator.calculate(time, checkpoint_time, plot, directory)
+        
+        Parameters
+        ----------
+        enviroment : Enviroment
+            The reaction environment containing:
+            - compounds: List of chemical compounds in the system
+            - reactions: List of chemical reactions with rate constants
+            - compounds_concentration: Initial concentrations of all compounds
+            - rate_constants: Forward and backward rate constants for each reaction
+            - reaction_by_index: Index mapping of reactants and products per reaction
+            - stoichiometric_coefficient_by_reaction: Stoichiometric coefficients per reaction
+            - rate_dependency_by_reaction: Reaction rate dependencies on each compound
+        time : float
+            Total simulation time in the same units as the calculator's accuracy.
+        checkpoint_time : list[float], optional
+            Times at which to record concentrations. Default is [].
+        plot : bool or str, optional
+            Plotting mode. Options:
+            - False: Do not plot (default).
+            - "interactive": Display real-time interactive plot.
+            - "save": Save the plot to the specified `directory`.
+        directory : str, optional
+            File path to save the plot if `plot="save"`. Default is "./plot.png".
+        
+        Returns
+        -------
+        list[list]
+            List of checkpoints, where each entry is `[time, concentrations]`.
+            The first entry includes the header `["time", compound_unicode_formulas]`.
+        
+        Raises
+        ------
+        ValueError
+            If `enviroment` is not an instance of `Enviroment`.
+        ValueError
+            If an invalid plotting mode or directory is provided.
+        ValueError
+            If `plot` is not one of [False, "save", "interactive"].
+        
+        Notes
+        -----
+        - This method automatically calls fit() before calculate(), so the
+          environment does not need to be fitted beforehand
+        - Concentrations are clamped to zero if they become negative during simulation
+        - Supports recording concentrations at arbitrary checkpoint times
+        - Interactive plotting allows the user to type 'exit' to close the plot
+        - The method uses numerical integration with a fixed time step defined by
+          the calculator's accuracy attribute
+        
+        Examples
+        --------
+        >>> from ChemCalc import Enviroment
+        >>> kc = KineticalCalculator(accuracy=0.01)
+        >>> env = Enviroment(...)  # Initialize environment with compounds and reactions
+        >>> # Fit and calculate in one step
+        >>> results = kc.fit_calculate(env, time=10, checkpoint_time=[1, 5, 10], plot="interactive")
+        """
+        self.fit(enviroment)
+        return self.calculate(time, checkpoint_time, plot, directory)
 
     def calculate_responsively(self  , checkpoint_time = [] ,animation_update_interval = 0.1 ):
         """
