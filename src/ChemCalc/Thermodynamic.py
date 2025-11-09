@@ -146,9 +146,9 @@ class EquilibriumCalculator:
         if self.fitted == False:
             raise ValueError("Environment not fitted")
         if self.method_of_calculation == "bgd":
-            return self._caculate_by_batch_gradient_descent(max_iter, learning_rate, tol, backtrack_beta, min_concentration)
+            return self._calculate_by_batch_gradient_descent(max_iter, learning_rate, tol, backtrack_beta, min_concentration)
         elif self.method_of_calculation == "sgd":
-            return self._caculate_by_stochastic_gradient_descent(max_iter, learning_rate, tol, backtrack_beta, min_concentration)
+            return self._calculate_by_stochastic_gradient_descent(max_iter, learning_rate, tol, backtrack_beta, min_concentration)
         elif self.method_of_calculation == "newton":
             return self._calculate_by_newton(max_iter, learning_rate, tol, backtrack_beta, min_concentration)
         return None
@@ -227,7 +227,7 @@ class EquilibriumCalculator:
         self.fit(env)
         return self.calculate(max_iter, learning_rate, tol, backtrack_beta, min_concentration)
 
-    def _caculate_by_batch_gradient_descent(self,
+    def _calculate_by_batch_gradient_descent(self,
                                             max_iter: int = 5000,
                                             learning_rate: float = 0.1,
                                             tol: float = 1e-8,
