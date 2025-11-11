@@ -4,3 +4,6 @@ src/ChemCompute/test.py
 src/ChemCompute/plot.png
 build
 dist
+__pycache__/
+*.pyc
+*.egg-info/
