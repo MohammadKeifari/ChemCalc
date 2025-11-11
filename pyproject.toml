@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "chemcalc"
+name = "chemcompute"
 version = "0.1.0"
 description = "A Python library for chemical reaction simulation, including kinetic modeling and thermodynamic equilibrium calculations"
 readme = "README.md"
@@ -40,10 +40,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/MohammadKeifari/ChemCalc"
-Documentation = "https://github.com/MohammadKeifari/ChemCalc#readme"
-Repository = "https://github.com/MohammadKeifari/ChemCalc"
-Issues = "https://github.com/yourusername/ChemCalc/issues"
+Homepage = "https://github.com/MohammadKeifari/ChemCompute"
+Documentation = "https://github.com/MohammadKeifari/ChemCompute#readme"
+Repository = "https://github.com/MohammadKeifari/ChemCompute"
+Issues = "https://github.com/yourusername/ChemCompute/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

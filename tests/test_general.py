@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from src.ChemCalc import Compound,Reaction,Enviroment
+from src.ChemCompute import Compound,Reaction,Enviroment
 
 
 # -------------------------

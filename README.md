@@ -1,4 +1,4 @@
-# ChemCalc
+# ChemCompute
 
 A Python library for chemical reaction simulation, including kinetic modeling and thermodynamic equilibrium calculations.
 
@@ -35,28 +35,28 @@ pip install numpy matplotlib
 
 ```bash
 git clone <repository-url>
-cd ChemCalc
+cd ChemCompute
 pip install -e .
 ```
 
 **Important:** After installation, you can import the package directly using:
 
 ```python
-from ChemCalc import Compound, Reaction, Enviroment
-from ChemCalc.Kinetic import KineticalCalculator
-from ChemCalc.Thermodynamic import EquilibriumCalculator
+from ChemCompute import Compound, Reaction, Enviroment
+from ChemCompute.Kinetic import KineticalCalculator
+from ChemCompute.Thermodynamic import EquilibriumCalculator
 ```
 
-The package must be installed (using `pip install -e .`) for these imports to work. Without installation, you would need to use `from src.ChemCalc import ...` instead.
+The package must be installed (using `pip install -e .`) for these imports to work. Without installation, you would need to use `from src.ChemCompute import ...` instead.
 
 ## Quick Start
 
 ### Basic Usage
 
 ```python
-from ChemCalc import Compound, Reaction, Enviroment
-from ChemCalc.Kinetic import KineticalCalculator
-from ChemCalc.Thermodynamic import EquilibriumCalculator
+from ChemCompute import Compound, Reaction, Enviroment
+from ChemCompute.Kinetic import KineticalCalculator
+from ChemCompute.Thermodynamic import EquilibriumCalculator
 
 # Create compounds
 A = Compound("A")
@@ -347,8 +347,8 @@ equilibrium = eq_calc.fit_calculate(
 ### Example 1: Simple Reversible Reaction
 
 ```python
-from ChemCalc import Compound, Reaction, Enviroment
-from ChemCalc.Kinetic import KineticalCalculator
+from ChemCompute import Compound, Reaction, Enviroment
+from ChemCompute.Kinetic import KineticalCalculator
 
 # Create reaction: A ⇌ B
 rxn = Reaction.from_string_simple_syntax(
@@ -387,7 +387,7 @@ results = kc.calculate(time=20.0, checkpoint_time=[5.0, 10.0, 15.0, 20.0])
 ### Example 3: Equilibrium Calculation
 
 ```python
-from ChemCalc.Thermodynamic import EquilibriumCalculator
+from ChemCompute.Thermodynamic import EquilibriumCalculator
 
 # A + 2B ⇌ C
 rxn = Reaction.from_string_simple_syntax(
@@ -444,9 +444,9 @@ pytest tests/test_thermodynamic.py
 ## Project Structure
 
 ```
-ChemCalc/
+ChemCompute/
 ├── src/                          # Source code directory
-│   └── ChemCalc/                 # Main package
+│   └── ChemCompute/                 # Main package
 │       ├── __init__.py           # Package initialization (exports core classes)
 │       ├── _general.py           # Core classes: Compound, Reaction, Enviroment
 │       ├── Kinetic.py            # KineticalCalculator class for kinetic simulations
@@ -542,7 +542,7 @@ print(compound.unicode_formula)  # H2O (plain text)
 
 ### 3. Reaction Definition and Syntax
 
-ChemCalc supports multiple ways to define chemical reactions, from simple to complex:
+ChemCompute supports multiple ways to define chemical reactions, from simple to complex:
 
 #### Simple Syntax
 
@@ -718,7 +718,7 @@ equilibrium = eq_calc.fit_calculate(
 
 ### 7. Multi-Reaction Systems
 
-ChemCalc excels at handling complex systems with multiple reactions:
+ChemCompute excels at handling complex systems with multiple reactions:
 
 **Features:**
 
@@ -773,7 +773,7 @@ env += rxn3    # Or use += operator
 
 ### 9. Temperature-Dependent Calculations
 
-ChemCalc supports automatic temperature-dependent calculations for rate constants and equilibrium constants using fundamental thermodynamic equations.
+ChemCompute supports automatic temperature-dependent calculations for rate constants and equilibrium constants using fundamental thermodynamic equations.
 
 **Thermodynamic Parameters:**
 

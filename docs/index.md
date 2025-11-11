@@ -1,10 +1,10 @@
-# ChemCalc Documentation
+# ChemCompute Documentation
 
-Welcome to the ChemCalc documentation! ChemCalc is a comprehensive Python library for chemical reaction simulation, including kinetic modeling and thermodynamic equilibrium calculations.
+Welcome to the ChemCompute documentation! ChemCompute is a comprehensive Python library for chemical reaction simulation, including kinetic modeling and thermodynamic equilibrium calculations.
 
 ## Overview
 
-ChemCalc provides a powerful and flexible framework for:
+ChemCompute provides a powerful and flexible framework for:
 
 - **Chemical Compound Management**: Create and manage chemical compounds with formulas, phases, and physical properties
 - **Reaction Definition**: Define complex chemical reactions with multiple reactants and products
@@ -19,7 +19,7 @@ ChemCalc provides a powerful and flexible framework for:
 
 ### Getting Started
 
-- [Installation Guide](installation.md) - How to install and set up ChemCalc
+- [Installation Guide](installation.md) - How to install and set up ChemCompute
 - [Quick Start Tutorial](quickstart.md) - Get up and running in minutes
 - [Basic Concepts](concepts.md) - Understanding the core concepts
 
@@ -58,7 +58,7 @@ ChemCalc provides a powerful and flexible framework for:
 
 - [Troubleshooting](troubleshooting.md) - Common issues and solutions
 - [FAQ](faq.md) - Frequently asked questions
-- [Contributing](contributing.md) - How to contribute to ChemCalc
+- [Contributing](contributing.md) - How to contribute to ChemCompute
 - [Changelog](changelog.md) - Version history and changes
 
 ## Key Features
@@ -68,7 +68,7 @@ ChemCalc provides a powerful and flexible framework for:
 Create compounds with formulas, phases, and physical properties:
 
 ```python
-from ChemCalc import Compound
+from ChemCompute import Compound
 
 # Simple compound
 water = Compound("H2O")
@@ -85,7 +85,7 @@ ethanol = Compound("C2H5OH", mp=-114, bp=78)
 Define reactions using simple or complex syntax with thermodynamic parameters:
 
 ```python
-from ChemCalc import Reaction
+from ChemCompute import Reaction
 
 # Simple syntax with thermodynamic parameters
 rxn = Reaction.from_string_simple_syntax(
@@ -127,7 +127,7 @@ rxn.T = 350  # Uses Arrhenius and van't Hoff equations
 Simulate reaction kinetics over time:
 
 ```python
-from ChemCalc.Kinetic import KineticalCalculator
+from ChemCompute.Kinetic import KineticalCalculator
 
 kc = KineticalCalculator(accuracy=1e-3)
 kc.fit(env)
@@ -139,7 +139,7 @@ results = kc.calculate(time=10.0, plot="interactive")
 Calculate equilibrium concentrations using multiple algorithms:
 
 ```python
-from ChemCalc.Thermodynamic import EquilibriumCalculator
+from ChemCompute.Thermodynamic import EquilibriumCalculator
 
 eq_calc = EquilibriumCalculator(method_of_calculation="newton")
 equilibrium = eq_calc.fit_calculate(env, max_iter=1000, tol=1e-8)
@@ -158,9 +158,9 @@ For detailed installation instructions, see the [Installation Guide](installatio
 Here's a complete example to get you started:
 
 ```python
-from ChemCalc import Compound, Reaction, Enviroment
-from ChemCalc.Kinetic import KineticalCalculator
-from ChemCalc.Thermodynamic import EquilibriumCalculator
+from ChemCompute import Compound, Reaction, Enviroment
+from ChemCompute.Kinetic import KineticalCalculator
+from ChemCompute.Thermodynamic import EquilibriumCalculator
 
 # Create a simple reversible reaction: A ⇌ B
 rxn = Reaction.from_string_simple_syntax(
@@ -221,4 +221,4 @@ Current version: 0.1.0
 
 ---
 
-**Next Steps**: Start with the [Installation Guide](installation.md) or jump to the [Quick Start Tutorial](quickstart.md) to begin using ChemCalc.
+**Next Steps**: Start with the [Installation Guide](installation.md) or jump to the [Quick Start Tutorial](quickstart.md) to begin using ChemCompute.

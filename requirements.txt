@@ -1,4 +1,4 @@
-# Core runtime dependencies for ChemCalc
+# Core runtime dependencies for ChemCompute
 numpy>=1.19.0
 matplotlib>=3.3.0
 

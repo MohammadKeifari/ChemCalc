@@ -17,14 +17,14 @@ if requirements_path.exists():
         ]
 
 setup(
-    name="chemcalc",
+    name="chemcompute",
     version="0.1.0",
     author="Mohammad Keifari",
     author_email="mohammadkeifari2007@gmail.com",
     description="A Python library for chemical reaction simulation, including kinetic modeling and thermodynamic equilibrium calculations",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/MohammadKeifari/ChemCalc",
+    url="https://github.com/MohammadKeifari/ChemCompute",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     classifiers=[
@@ -52,9 +52,9 @@ setup(
     },
     keywords="chemistry, chemical reactions, kinetics, thermodynamics, equilibrium, simulation",
     project_urls={
-        "Bug Reports": "https://github.com/MohammadKeifari/ChemCalc/issues",
-        "Source": "https://github.com/MohammadKeifari/ChemCalc",
-        "Documentation": "https://github.com/MohammadKeifari/ChemCalc#readme",
+        "Bug Reports": "https://github.com/MohammadKeifari/ChemCompute/issues",
+        "Source": "https://github.com/MohammadKeifari/ChemCompute",
+        "Documentation": "https://github.com/MohammadKeifari/ChemCompute#readme",
     },
 )
 

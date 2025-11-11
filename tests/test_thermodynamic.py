@@ -5,13 +5,13 @@ from pathlib import Path
 
 # Add paths to sys.path for imports
 project_root = Path(__file__).parent.parent
-src_chemcalc_path = project_root / "src" / "ChemCalc"
-sys.path.insert(0, str(src_chemcalc_path))  # For _general import in Thermodynamic.py
-sys.path.insert(0, str(project_root))  # For src.ChemCalc imports
+src_chemcompute_path = project_root / "src" / "ChemCompute"
+sys.path.insert(0, str(src_chemcompute_path))  # For _general import in Thermodynamic.py
+sys.path.insert(0, str(project_root))  # For src.ChemCompute imports
 
 # Import from _general the same way Thermodynamic.py does to ensure type compatibility
 from _general import Enviroment, Compound, Reaction
-from src.ChemCalc.Thermodynamic import EquilibriumCalculator
+from src.ChemCompute.Thermodynamic import EquilibriumCalculator
 
 
 # -------------------------
