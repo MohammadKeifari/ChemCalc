@@ -169,6 +169,7 @@ class KineticalCalculator:
         elif plot == "save" :
             for k in range(len(self.concentrations)):
                 plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
+            plt.legend()
             plt.savefig(directory)
             plt.close('all')
             del plt

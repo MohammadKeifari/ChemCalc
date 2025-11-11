@@ -1,17 +1,9 @@
 import pytest
 import numpy as np
-import sys
-from pathlib import Path
 
-# Add paths to sys.path for imports
-project_root = Path(__file__).parent.parent
-src_chemcompute_path = project_root / "src" / "ChemCompute"
-sys.path.insert(0, str(src_chemcompute_path))  # For _general import in Thermodynamic.py
-sys.path.insert(0, str(project_root))  # For src.ChemCompute imports
-
-# Import from _general the same way Thermodynamic.py does to ensure type compatibility
-from _general import Enviroment, Compound, Reaction
-from src.ChemCompute.Thermodynamic import EquilibriumCalculator
+# Import from ChemCompute package
+from ChemCompute import Enviroment, Compound, Reaction
+from ChemCompute.Thermodynamic import EquilibriumCalculator
 
 
 # -------------------------
