@@ -306,6 +306,30 @@ results = kc.fit_calculate(env, time=10.0, plot="interactive")
 - `plot="interactive"`: Interactive matplotlib plot (type 'exit' to close)
 - `plot="save"`: Save plot to file (use `directory` parameter)
 
+**Custom Colors:**
+
+You can specify custom colors for each compound in the plot:
+
+```python
+# Define custom colors (one per compound)
+colors = ['#26547c', '#ef476f', '#ffd166', '#06d6a0']  # Hex colors
+# Or use color names: ['red', 'blue', 'green']
+# Or RGB tuples: [(0.2, 0.3, 0.5), (0.9, 0.3, 0.4)]
+
+results = kc.calculate(
+    time=10.0,
+    plot="save",
+    colors=colors  # Custom colors for each compound
+)
+```
+
+The `colors` parameter accepts:
+- Color name strings (e.g., `'red'`, `'blue'`, `'green'`)
+- Hex color strings (e.g., `'#26547c'`, `'#ef476f'`)
+- RGB tuples (e.g., `(0.2, 0.3, 0.5)`)
+- Must have length equal to the number of compounds
+- If `None` (default), random colors are generated
+
 ### EquilibriumCalculator
 
 Calculates equilibrium concentrations using numerical optimization.
@@ -430,6 +454,45 @@ rxn = Reaction.from_string_simple_syntax(
 
 env = Enviroment(rxn, T=298)
 ```
+
+### Example 5: Custom Colors for Multi-Compound Reactions
+
+This example demonstrates using custom colors to visualize multiple compounds in a complex reaction system:
+
+```python
+from ChemCompute import Reaction, Enviroment
+from ChemCompute.Kinetic import KineticalCalculator
+
+# Create multiple reactions with shared compounds
+rxn1 = Reaction.from_string_simple_syntax("g + a > 2a + g", kf=0.1, kb=0)
+rxn2 = Reaction.from_string_simple_syntax("a + b > 2b", kf=0.1, kb=0)
+rxn3 = Reaction.from_string_simple_syntax("b > d", kf=0.1, kb=0)
+
+# Create environment with all reactions
+env = Enviroment(rxn1, rxn2, rxn3)
+env.concentrations = [3, 2, 1, 0]  # [g, a, b, d]
+
+# Initialize calculator
+kc = KineticalCalculator(accuracy=1e-1)
+kc.fit(env)
+
+# Define custom colors for each compound (g, a, b, d)
+custom_colors = ['#26547c', '#ef476f', '#ffd166', '#06d6a0']
+
+# Calculate and save plot with custom colors
+results = kc.calculate(
+    time=10,
+    plot="save",
+    directory="./plot.png",
+    colors=custom_colors
+)
+
+print(f"Final concentrations: {results[-1]}")
+```
+
+The resulting plot (saved as `plot.png`) shows each compound in its specified color, making it easy to distinguish between different species in complex reaction networks.
+
+![Kinetic Simulation Plot](src/ChemCompute/plot.png)
 
 ## Testing
 
@@ -668,7 +731,8 @@ kc.fit(env)
 results = kc.calculate(
     time=10.0,
     checkpoint_time=[1.0, 5.0, 10.0],  # Record at these times
-    plot="interactive"  # or "save" or False
+    plot="interactive",  # or "save" or False
+    colors=['red', 'blue', 'green']  # Optional: custom colors per compound
 )
 ```
 
@@ -677,6 +741,15 @@ results = kc.calculate(
 - `plot=False`: No plotting, just return results
 - `plot="interactive"`: Display interactive matplotlib plot (type 'exit' to close)
 - `plot="save"`: Save plot to file (specify path with `directory` parameter)
+
+**Custom Colors:**
+
+The `colors` parameter allows you to specify colors for each compound:
+- Accepts color names: `['red', 'blue', 'green']`
+- Hex color codes: `['#26547c', '#ef476f', '#ffd166']`
+- RGB tuples: `[(1, 0, 0), (0, 0, 1), (0, 1, 0)]`
+- Must match the number of compounds in the environment
+- If `None` (default), random colors are automatically generated
 
 ### 6. Equilibrium Calculations
 

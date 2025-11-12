@@ -57,7 +57,7 @@ class KineticalCalculator:
             self.concentrations.append(compound["concentration"])
         self.fitted = True
 
-    def calculate(self  , time , checkpoint_time = [] , plot = False , directory = "./plot.png"):
+    def calculate(self  , time , checkpoint_time = [] , plot = False , directory = "./plot.png", colors = None):
         """
         Numerically integrate the reaction kinetics over a specified time interval.
 
@@ -74,6 +74,9 @@ class KineticalCalculator:
                 - "interactive": Display real-time interactive plot.
                 - "save": Save the plot to the specified `directory`.
             directory (str, optional): File path to save the plot if `plot="save"`.
+            colors (list, optional): List of colors for plotting, one per compound.
+                Each color can be a string (e.g., 'red', 'blue') or RGB tuple (e.g., (0.5, 0.3, 0.8)).
+                If None, random colors are generated. Must have length equal to number of compounds.
 
         Returns:
             list[list]: List of checkpoints, where each entry is `[time, concentrations]`.
@@ -106,14 +109,24 @@ class KineticalCalculator:
         import matplotlib.pyplot as plt
 
         
-        colors = []
+        plot_colors = []
         checkpoints = []
         if plot != False:
             plt.figure()
-            for i in self.enviroment.compounds :
-                colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
-                plt.xlabel("time")
-                plt.ylabel("concentration")
+            num_compounds = len(self.enviroment.compounds)
+            
+            # Validate colors if provided
+            if colors is not None:
+                if len(colors) != num_compounds:
+                    raise ValueError(f"Number of colors ({len(colors)}) must equal number of compounds ({num_compounds})")
+                plot_colors = colors
+            else:
+                # Generate random colors if not provided
+                for i in self.enviroment.compounds:
+                    plot_colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
+            
+            plt.xlabel("time")
+            plt.ylabel("concentration")
         concentrations = self.enviroment.concentrations_array
         rate_dependencies = self.enviroment.rate_dependency_array
         stoichiometric_coefficient = self.enviroment.stoichiometric_coefficient_array
@@ -144,7 +157,7 @@ class KineticalCalculator:
             new_conentratinos[new_conentratinos < 0] = 0
             if plot :
                 for k in range(len(self.concentrations)):
-                    plt.plot([t , t-self.accuracy],[new_conentratinos[k] , concentrations[k]] , color = colors[k])
+                    plt.plot([t , t-self.accuracy],[new_conentratinos[k] , concentrations[k]] , color = plot_colors[k])
             for checkpoint_t in checkpoint_time:
                 
                 if t <= checkpoint_t < t + self.accuracy:
@@ -153,7 +166,7 @@ class KineticalCalculator:
             t += self.accuracy
         if plot == "interactive":
             for k in range(len(self.concentrations)):
-                plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
+                plt.plot([0 , 0],[0 , 0] , color = plot_colors[k], label = self.enviroment.compounds[k].unicode_formula)
             plt.legend()
             plt.show(block = False)
             
@@ -168,7 +181,7 @@ class KineticalCalculator:
                     print("Invalid input.")
         elif plot == "save" :
             for k in range(len(self.concentrations)):
-                plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
+                plt.plot([0 , 0],[0 , 0] , color = plot_colors[k], label = self.enviroment.compounds[k].unicode_formula)
             plt.legend()
             plt.savefig(directory)
             plt.close('all')
@@ -176,7 +189,7 @@ class KineticalCalculator:
         checkpoints.append(concentrations)  
         return checkpoints
 
-    def fit_calculate(self, enviroment, time, checkpoint_time=[], plot=False, directory="./plot.png"):
+    def fit_calculate(self, enviroment, time, checkpoint_time=[], plot=False, directory="./plot.png", colors=None):
         """
         Fit the calculator to an environment and calculate reaction kinetics in one call.
         
@@ -210,6 +223,10 @@ class KineticalCalculator:
             - "save": Save the plot to the specified `directory`.
         directory : str, optional
             File path to save the plot if `plot="save"`. Default is "./plot.png".
+        colors : list, optional
+            List of colors for plotting, one per compound.
+            Each color can be a string (e.g., 'red', 'blue') or RGB tuple (e.g., (0.5, 0.3, 0.8)).
+            If None, random colors are generated. Must have length equal to number of compounds.
         
         Returns
         -------
@@ -245,9 +262,9 @@ class KineticalCalculator:
         >>> results = kc.fit_calculate(env, time=10, checkpoint_time=[1, 5, 10], plot="interactive")
         """
         self.fit(enviroment)
-        return self.calculate(time, checkpoint_time, plot, directory)
+        return self.calculate(time, checkpoint_time, plot, directory, colors)
 
-    def calculate_responsively(self  , checkpoint_time = [] ,animation_update_interval = 0.1 ):
+    def calculate_responsively(self  , checkpoint_time = [] ,animation_update_interval = 0.1 , colors = None):
         """
         Simulate and visualize reaction kinetics dynamically using an interactive animation.
 
@@ -258,6 +275,9 @@ class KineticalCalculator:
         Args:
             checkpoint_time (list[float], optional): Specific times at which to record concentrations.
             animation_update_interval (float, optional): Time interval between animation updates (in seconds).
+            colors (list, optional): List of colors for plotting, one per compound.
+                Each color can be a string (e.g., 'red', 'blue') or RGB tuple (e.g., (0.5, 0.3, 0.8)).
+                If None, random colors are generated. Must have length equal to number of compounds.
             plot (bool, optional): Whether to visualize the reaction dynamically.
                 - If True, a live plot will be shown and user can interact with it:
                     * 'stop'  - pause the animation
@@ -295,13 +315,23 @@ class KineticalCalculator:
         from matplotlib.animation import FuncAnimation
 
         plt.figure()
-        colors = []
+        plot_colors = []
         checkpoints = []
         if plot:
-            for i in self.enviroment.compounds :
-                colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
-                plt.xlabel("time")
-                plt.ylabel("concentration")
+            num_compounds = len(self.enviroment.compounds)
+            
+            # Validate colors if provided
+            if colors is not None:
+                if len(colors) != num_compounds:
+                    raise ValueError(f"Number of colors ({len(colors)}) must equal number of compounds ({num_compounds})")
+                plot_colors = colors
+            else:
+                # Generate random colors if not provided
+                for i in self.enviroment.compounds:
+                    plot_colors.append(((random.randint(0, 95)/100) , (random.randint(0, 95)/100) , (random.randint(0, 95)/100)))
+            
+            plt.xlabel("time")
+            plt.ylabel("concentration")
                 
         
         concentrations = self.enviroment.concentrations_array
@@ -336,7 +366,7 @@ class KineticalCalculator:
             new_conentratinos[new_conentratinos < 0] = 0
         
             for k in range(len(self.concentrations)):
-                plt.plot([t , t-self.accuracy],[new_conentratinos[k] , concentrations[k]] , color = colors[k])
+                plt.plot([t , t-self.accuracy],[new_conentratinos[k] , concentrations[k]] , color = plot_colors[k])
                 
             for checkpoint_t in checkpoint_time:
                 
@@ -347,7 +377,7 @@ class KineticalCalculator:
         ani = FuncAnimation(plt.gcf() , animate , interval = animation_update_interval , cache_frame_data=False)        
         if plot :
             for k in range(len(self.concentrations)):
-                plt.plot([0 , 0],[0 , 0] , color = colors[k], label = self.enviroment.compounds[k].unicode_formula)
+                plt.plot([0 , 0],[0 , 0] , color = plot_colors[k], label = self.enviroment.compounds[k].unicode_formula)
 
             plt.legend()
             plt.show(block = False)
